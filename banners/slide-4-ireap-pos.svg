@@ -1,0 +1,31 @@
+<svg viewBox="0 0 1600 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg4" cx="10%" cy="20%" r="95%">
+      <stop offset="0%" stop-color="#ff4d52"/>
+      <stop offset="75%" stop-color="#6e0e16"/>
+    </radialGradient>
+    <linearGradient id="chip4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.22)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.08)"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="300" fill="url(#bg4)"/>
+  <circle cx="1470" cy="55" r="200" fill="#ffffff" opacity="0.07"/>
+  <circle cx="1540" cy="255" r="130" fill="#ffffff" opacity="0.06"/>
+
+  <rect x="56" y="48" width="300" height="30" rx="15" fill="rgba(255,255,255,0.18)"/>
+  <text x="76" y="68" font-family="Arial, sans-serif" font-size="13" font-weight="800" letter-spacing="1.4" fill="#fff">ANDROID POS &amp; SALESMAN APP</text>
+
+  <text x="56" y="138" font-family="Arial, sans-serif" font-size="44" font-weight="800" fill="#fff">iREAP POS &#8212; Easy</text>
+  <text x="56" y="185" font-family="Arial, sans-serif" font-size="44" font-weight="800" fill="#fff">&amp; Powerful</text>
+
+  <text x="56" y="223" font-family="Arial, sans-serif" font-size="17" fill="#ffe0e1" opacity="0.95">A powerful POS solution for retail businesses, supporting multi-branch</text>
+  <text x="56" y="245" font-family="Arial, sans-serif" font-size="17" fill="#ffe0e1" opacity="0.95">operations, franchises, and distributors.</text>
+
+  <rect x="56" y="262" width="225" height="34" rx="9" fill="#ffffff"/>
+  <text x="168" y="284" font-family="Arial, sans-serif" font-size="14" font-weight="800" fill="#6e0e16" text-anchor="middle">Explore iREAP POS &#8594;</text>
+
+  <rect x="1430" y="100" width="100" height="100" rx="20" fill="url(#chip4)" stroke="rgba(255,255,255,0.32)" stroke-width="1.5"/>
+  <rect x="1462" y="118" width="36" height="60" rx="6" fill="none" stroke="#fff" stroke-width="2.6"/>
+  <line x1="1472" y1="158" x2="1488" y2="158" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,34 @@
+<svg viewBox="0 0 1600 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg6" cx="10%" cy="20%" r="95%">
+      <stop offset="0%" stop-color="#ffd25c"/>
+      <stop offset="80%" stop-color="#6b4c00"/>
+    </radialGradient>
+    <linearGradient id="chip6" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.22)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.08)"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="300" fill="url(#bg6)"/>
+  <circle cx="1470" cy="55" r="200" fill="#ffffff" opacity="0.08"/>
+  <circle cx="1540" cy="255" r="130" fill="#ffffff" opacity="0.07"/>
+
+  <rect x="56" y="48" width="320" height="30" rx="15" fill="rgba(255,255,255,0.2)"/>
+  <text x="76" y="68" font-family="Arial, sans-serif" font-size="13" font-weight="800" letter-spacing="1.2" fill="#4a3500">PRODUCT DEMO &#183; SAP B1 INTEGRATION</text>
+
+  <text x="56" y="135" font-family="Arial, sans-serif" font-size="40" font-weight="800" fill="#3a2900">iReapBiz &#8212; SAP</text>
+  <text x="56" y="182" font-family="Arial, sans-serif" font-size="40" font-weight="800" fill="#3a2900">Business One Integration</text>
+
+  <text x="56" y="222" font-family="Arial, sans-serif" font-size="17" fill="#5c4400" opacity="0.95">A web app integrated directly with SAP Business One for more</text>
+  <text x="56" y="244" font-family="Arial, sans-serif" font-size="17" fill="#5c4400" opacity="0.95">efficient business operations.</text>
+
+  <rect x="56" y="262" width="170" height="34" rx="9" fill="#ffffff"/>
+  <text x="141" y="284" font-family="Arial, sans-serif" font-size="14" font-weight="800" fill="#6b4c00" text-anchor="middle">Visit Website &#8594;</text>
+  <rect x="236" y="262" width="160" height="34" rx="9" fill="rgba(255,255,255,0.18)" stroke="rgba(80,55,0,0.4)" stroke-width="1.4"/>
+  <text x="316" y="284" font-family="Arial, sans-serif" font-size="13" font-weight="800" fill="#3a2900" text-anchor="middle">&#9654; Watch Demo</text>
+
+  <rect x="1430" y="100" width="100" height="100" rx="20" fill="url(#chip6)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+  <rect x="1450" y="122" width="60" height="42" rx="5" fill="none" stroke="#4a3500" stroke-width="2.6"/>
+  <rect x="1472" y="166" width="16" height="3" fill="#4a3500"/>
+  <polygon points="1470,135 1486,143 1470,151" fill="#4a3500"/>
+</svg>
