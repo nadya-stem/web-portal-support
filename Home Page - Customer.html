@@ -1,0 +1,1164 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support Ticketing System - Dashboard Redesign</title>
+<style>
+  :root{
+    --blue:#2563eb;
+    --blue-dark:#1d4ed8;
+    --blue-ink:#0f1f3d;
+    --ink:#1a1f29;
+    --muted:#5b6472;
+    --bg:#f1f4f8;
+    --line:#e6e9ee;
+    --open:#2563eb;
+    --progress:#f59e0b;
+    --closed:#16a34a;
+    --radius:16px;
+    --focus:#2563eb;
+  }
+  *{box-sizing:border-box;}
+  a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-visible{
+    outline:2.5px solid var(--focus); outline-offset:2px; border-radius:6px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+  }
+  .sr-only{ position:absolute; width:1px;height:1px; padding:0;margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  body{
+    margin:0;
+    font-family:'Segoe UI', system-ui, Roboto, Arial, sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    overflow-x:hidden;
+  }
+  .app{ min-height:100vh; width:100%; overflow-x:hidden; }
+
+  /* Sidebar */
+  .sidebar{
+    width:230px; background:#fff; border-right:1px solid var(--line); flex-shrink:0;
+    position:fixed; inset:0 auto 0 0; height:100vh; z-index:30;
+    overflow-y:auto; overflow-x:hidden;
+    transition:width .24s ease, transform .24s ease, box-shadow .24s ease;
+  }
+  .sidebar-header{ background:linear-gradient(160deg,var(--blue) 0%, var(--blue-dark) 100%); color:#fff; padding:22px 18px 26px; text-align:center; transition:padding .24s ease; }
+  .sidebar-header .logo{ width:64px;height:64px;background:#fff;border-radius:12px; display:flex;align-items:center;justify-content:center; margin:0 auto 10px;font-weight:800;color:var(--blue);font-size:22px; transition:width .24s ease, height .24s ease, margin .24s ease, border-radius .24s ease; }
+  .sidebar-header .email{font-size:13px;opacity:.9;white-space:nowrap;overflow:hidden;transition:opacity .18s ease, transform .18s ease, height .18s ease;}
+  .sidebar-header .name{font-size:15px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;transition:opacity .18s ease, transform .18s ease, height .18s ease, margin .18s ease;}
+  .nav{padding:8px 0;}
+  .nav a{ display:flex;align-items:center;gap:12px; padding:13px 20px; color:#3a3f44; text-decoration:none; font-size:14.5px; border-left:3px solid transparent; white-space:nowrap; transition:padding .24s ease, gap .24s ease, font-size .18s ease, background .18s ease, border-color .18s ease; }
+  .nav a svg{ width:18px;height:18px; flex-shrink:0; transition:width .24s ease, height .24s ease; }
+  .nav a.active{background:#eef3ff;border-left-color:var(--blue);font-weight:600;color:var(--blue-ink);}
+  .nav a:hover{background:#f7f8f9;}
+  .sidebar-floating-toggle{
+    position:fixed; top:92px; left:216px; z-index:35;
+    width:32px; height:44px; border-radius:0 999px 999px 0;
+    background:#fff; color:var(--blue); border:1px solid var(--line); border-left:none;
+    box-shadow:0 10px 24px rgba(15,31,61,.18);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:left .24s ease, transform .18s ease, box-shadow .18s ease, color .18s ease;
+  }
+  .sidebar-floating-toggle:hover{ color:var(--blue-dark); transform:translateX(2px); box-shadow:0 14px 28px rgba(15,31,61,.22); }
+  .sidebar-floating-toggle svg{ width:16px; height:16px; transition:transform .24s ease; }
+  .sidebar-scrim{ display:none; position:fixed; inset:0; background:rgba(8,10,16,.45); z-index:25; }
+
+  body.sidebar-collapsed .sidebar{ width:78px; }
+  body.sidebar-collapsed .sidebar-header{ padding:18px 10px; }
+  body.sidebar-collapsed .sidebar-header .logo{ width:44px; height:44px; margin-bottom:0; border-radius:10px; }
+  body.sidebar-collapsed .sidebar-header .email,
+  body.sidebar-collapsed .sidebar-header .name{ opacity:0; transform:translateX(-8px); height:0; margin:0; pointer-events:none; }
+  body.sidebar-collapsed .nav a{ justify-content:center; gap:0; padding:14px 0; font-size:0; border-left-width:0; border-right:3px solid transparent; }
+  body.sidebar-collapsed .nav a.active{ border-left-color:transparent; border-right-color:var(--blue); }
+  body.sidebar-collapsed .nav a svg{ width:20px; height:20px; }
+  body.sidebar-collapsed .sidebar-floating-toggle{ left:64px; }
+  body.sidebar-collapsed .sidebar-floating-toggle svg{ transform:rotate(180deg); }
+
+  .main{ min-width:0; min-height:100vh; display:flex; flex-direction:column; margin-left:230px; width:calc(100% - 230px); transition:margin-left .24s ease, width .24s ease; }
+  body.sidebar-collapsed .main{ margin-left:78px; width:calc(100% - 78px); }
+  .topbar{ background:linear-gradient(95deg,var(--blue) 0%, var(--blue-dark) 100%); color:#fff; display:flex;align-items:center;justify-content:space-between; padding:14px 26px; }
+  .topbar .title{display:flex;align-items:center;gap:14px;font-weight:600;font-size:16px;}
+  .topbar .title button{ background:none;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;padding:4px;border-radius:6px; }
+  .topbar .title button:hover{ background:rgba(255,255,255,.12); }
+  .topbar .icons{display:flex;align-items:center;gap:10px;font-size:14px;}
+  .icon-btn{ background:none;border:none;color:#fff;cursor:pointer; width:36px;height:36px;border-radius:8px; display:flex;align-items:center;justify-content:center; }
+  .icon-btn:hover{ background:rgba(255,255,255,.14); }
+  .icon-btn svg{ width:19px;height:19px; }
+  .logout-link{ display:flex;align-items:center;gap:7px; color:#fff; text-decoration:none; font-size:13.5px; font-weight:600; padding:8px 12px; border-radius:8px; }
+  .logout-link:hover{ background:rgba(255,255,255,.14); }
+  .logout-link svg{ width:16px;height:16px; }
+  .bell{position:relative;}
+  .bell .dot{ position:absolute;top:2px;right:2px;background:#e23b3b;color:#fff; font-size:10px;border-radius:50%;width:16px;height:16px; display:flex;align-items:center;justify-content:center; border:2px solid var(--blue-dark); }
+
+  .content{padding:26px 30px 40px; flex:1; max-width:1500px; width:100%; min-width:0; margin:0 auto;}
+
+  .section-gap{ margin-bottom:20px; }
+  .section-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px; }
+  .section-head h3{ margin:0; font-size:15.5px; font-weight:800; color:var(--blue-ink); letter-spacing:-.2px; }
+  .section-head span{ font-size:12.5px; color:var(--muted); }
+
+  /* ============ 1. PREMIUM BANNER SLIDER ============ */
+  .banner-carousel{
+    position:relative; height:150px; border-radius:18px; overflow:hidden;
+    box-shadow:0 14px 34px -10px rgba(15,31,61,.22);
+  }
+  .banner-track{ display:flex; height:100%; transition:transform .65s cubic-bezier(.65,0,.35,1); }
+  .banner-slide{
+    min-width:100%; height:100%; position:relative;
+    display:flex; align-items:center;
+    padding:0 36px; text-decoration:none; color:#fff; overflow:hidden;
+  }
+  .banner-slide.theme-blue{ background:radial-gradient(120% 140% at 10% 20%, #2a4fc9 0%, #14245e 70%); }
+  .banner-slide.theme-orange{ background:radial-gradient(120% 140% at 10% 20%, #ff8a3d 0%, #7a3a06 75%); }
+  .banner-slide.theme-red{ background:radial-gradient(120% 140% at 10% 20%, #ff4d52 0%, #6e0e16 75%); }
+  .banner-slide.theme-green{ background:radial-gradient(120% 140% at 10% 20%, #2fbf81 0%, #0a4330 75%); }
+  .banner-slide.theme-yellow{ background:radial-gradient(120% 140% at 10% 20%, #ffd25c 0%, #6b4c00 80%); }
+  .banner-mesh{
+    position:absolute; inset:0; pointer-events:none; opacity:.5;
+    background-image:radial-gradient(circle at 85% 25%, rgba(255,255,255,.18) 0%, transparent 45%),
+                      radial-gradient(circle at 95% 90%, rgba(255,255,255,.10) 0%, transparent 40%);
+  }
+  .banner-glass{
+    position:relative; z-index:2;
+    backdrop-filter:blur(6px);
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:16px;
+    padding:16px 22px;
+    max-width:540px;
+  }
+  .banner-eyebrow{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:10px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase;
+    background:rgba(255,255,255,.16); padding:4px 10px; border-radius:20px; margin-bottom:8px;
+  }
+  .banner-glass h2{ margin:0 0 6px; font-size:20px; font-weight:800; letter-spacing:-.4px; line-height:1.15; }
+  .banner-glass p{ margin:0 0 12px; font-size:12.5px; line-height:1.5; opacity:.92; max-width:440px; }
+  .banner-cta-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .banner-cta{
+    display:inline-flex; align-items:center; gap:6px;
+    background:#fff; color:var(--blue-ink);
+    font-size:12px; font-weight:800; padding:8px 16px; border-radius:9px;
+    box-shadow:0 8px 20px rgba(0,0,0,.18);
+    text-decoration:none; border:none; cursor:pointer; font-family:inherit;
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .banner-cta:hover{ transform:translateY(-2px); box-shadow:0 12px 26px rgba(0,0,0,.22); }
+  .banner-cta.secondary{ background:rgba(255,255,255,.12); color:#fff; border:1.5px solid rgba(255,255,255,.55); box-shadow:none; }
+  .banner-logo-chip{
+    position:absolute; right:32px; top:50%; transform:translateY(-50%);
+    width:84px;height:84px; border-radius:18px;
+    background:rgba(255,255,255,.95);
+    display:flex;align-items:center;justify-content:center; padding:12px;
+    box-shadow:0 14px 28px rgba(0,0,0,.26);
+    z-index:2;
+  }
+  .banner-logo-chip img{ max-width:100%; max-height:100%; object-fit:contain; }
+  .banner-icon-chip{
+    position:absolute; right:32px; top:50%; transform:translateY(-50%);
+    width:84px;height:84px; border-radius:18px;
+    background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.3);
+    display:flex;align-items:center;justify-content:center;
+    z-index:2;
+  }
+  .banner-icon-chip svg{ width:40px; height:40px; }
+
+  .banner-nav{
+    position:absolute; top:50%; transform:translateY(-50%); width:32px;height:26px;border-radius:50%;
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.35); color:#fff; font-size:16px;
+    display:flex;align-items:center;justify-content:center; cursor:pointer; z-index:4; backdrop-filter:blur(3px);
+    transition:background .2s;
+  }
+  .banner-nav:hover{ background:rgba(255,255,255,.32); }
+  .banner-prev{ left:14px; } .banner-next{ right:14px; }
+  .banner-dots{ position:absolute; bottom:12px; left:22px; display:flex; gap:8px; z-index:4; }
+  .banner-dot{ width:24px; height:4px; border-radius:3px; background:rgba(255,255,255,.35); border:none; padding:0; cursor:pointer; transition:background .2s; }
+  .banner-dot.active{ background:#fff; }
+  .banner-pause{
+    position:absolute; bottom:10px; right:14px; width:26px;height:26px;border-radius:50%;
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.35); color:#fff;
+    display:flex;align-items:center;justify-content:center; cursor:pointer; z-index:4;
+    transition:background .2s;
+  }
+  .banner-pause:hover{ background:rgba(255,255,255,.32); }
+  .banner-pause svg{ width:12px;height:12px; }
+  .asset-slide .banner-glass{ max-width:440px; }
+  .asset-promo-card{
+    position:absolute; right:34px; top:50%; transform:translateY(-50%);
+    width:320px; min-height:124px; z-index:2;
+    background:rgba(255,255,255,.96); color:var(--blue-ink);
+    border-radius:16px; padding:14px 16px 12px;
+    box-shadow:0 16px 34px rgba(0,0,0,.25);
+  }
+  .asset-promo-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:8px; }
+  .asset-promo-badge{
+    display:inline-flex; align-items:center; gap:5px;
+    background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff;
+    font-size:9px; font-weight:800; padding:4px 10px; border-radius:999px;
+  }
+  .asset-promo-title{ font-size:13px; font-weight:800; color:var(--blue-ink); margin-top:6px; }
+  .asset-promo-price{ font-size:22px; font-weight:900; line-height:1; white-space:nowrap; }
+  .asset-promo-price span{ font-size:11px; font-weight:800; color:var(--blue); vertical-align:super; margin-right:3px; }
+  .asset-promo-price small{ font-size:10px; color:var(--muted); font-weight:700; vertical-align:baseline; margin-left:2px; }
+  .asset-package-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin-bottom:8px; }
+  .asset-package-row span{
+    background:#eef3ff; border:1px solid #dbe9ff; color:var(--blue-ink);
+    border-radius:9px; padding:5px 6px; font-size:9.5px; font-weight:800; text-align:center;
+  }
+  .asset-package-row span strong{ display:block; font-size:10px; color:var(--blue); margin-top:1px; }
+  .asset-subscribe-btn{
+    display:flex; align-items:center; justify-content:center; width:100%;
+    background:linear-gradient(120deg,var(--blue),var(--blue-dark)); color:#fff;
+    border-radius:10px; padding:8px 12px; font-size:11.5px; font-weight:800;
+    text-decoration:none; box-shadow:0 10px 20px rgba(37,99,235,.28);
+  }
+  .asset-subscribe-btn:hover{ transform:translateY(-1px); box-shadow:0 13px 24px rgba(37,99,235,.34); }
+
+  /* ============ NEW: PRICING PROMO BANNER SLIDE (iReap Asset) ============ */
+  .banner-slide.theme-pricing{
+    background:radial-gradient(130% 160% at 6% 18%, #2148b0 0%, #102a66 55%, #0b1f4d 100%);
+    padding:0; align-items:stretch; gap:0;
+  }
+  /* ============ IMAGE-BASED BANNER SLIDES ============
+     Each slide is now just one image. To change a banner, replace the file
+     in /banners/ (keep the same filename) — no code edits needed. */
+  .banner-slide-img{ min-width:100%; height:100%; position:relative; display:block; }
+  .banner-slide-img img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .banner-slide-img .banner-play-btn{
+    position:absolute; right:30px; bottom:16px; z-index:4;
+    display:inline-flex; align-items:center; gap:7px;
+    background:rgba(0,0,0,.32); border:1.5px solid rgba(255,255,255,.7); color:#fff;
+    font-size:12px; font-weight:800; padding:8px 14px; border-radius:9px; cursor:pointer; font-family:inherit;
+    backdrop-filter:blur(3px);
+  }
+  .banner-slide-img .banner-play-btn:hover{ background:rgba(0,0,0,.5); }
+  .pricing-left{
+    flex:0 0 220px; display:flex; flex-direction:column; justify-content:center;
+    padding:0 18px 0 28px; position:relative; z-index:2;
+  }
+  .pricing-logo-row{ display:flex; align-items:center; gap:9px; margin-bottom:16px; }
+  .pricing-logo-icon{
+    width:38px; height:38px; border-radius:50%; background:radial-gradient(circle at 30% 30%, #ff6b5e, #d6261c);
+    display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:19px;
+    font-style:italic; box-shadow:0 4px 10px rgba(0,0,0,.3); flex-shrink:0;
+  }
+  .pricing-logo-text{ display:flex; flex-direction:column; line-height:1.05; }
+  .pricing-logo-text .t1{ font-size:20px; font-weight:800; color:#fff; letter-spacing:-.3px; }
+  .pricing-logo-text .t2{ font-size:11px; font-weight:900; color:#ff5b52; letter-spacing:1.6px; margin-top:1px; }
+  .pricing-tagline{ color:#fff; font-size:13.5px; font-weight:800; line-height:1.4; max-width:190px; letter-spacing:-.1px; }
+
+  .pricing-cards-row{ display:flex; align-items:center; gap:9px; padding:10px 4px; flex:1 1 auto; justify-content:center; z-index:2; position:relative; }
+  .pricing-card{
+    background:#fff; border-radius:11px; width:112px; flex-shrink:0; padding:11px 9px 9px;
+    position:relative; box-shadow:0 10px 22px rgba(0,0,0,.2);
+  }
+  .pricing-card.featured{ border:1.5px solid #2563eb; box-shadow:0 14px 28px rgba(0,0,0,.28); }
+  .pricing-badge-pop{
+    position:absolute; top:-9px; left:50%; transform:translateX(-50%); background:#2563eb; color:#fff;
+    font-size:8px; font-weight:800; padding:3px 9px; border-radius:999px; white-space:nowrap;
+    display:flex; align-items:center; gap:3px; box-shadow:0 4px 8px rgba(37,99,235,.4);
+  }
+  .pricing-card-icon{ width:24px; height:24px; border-radius:7px; display:flex; align-items:center; justify-content:center; margin-bottom:7px; }
+  .pricing-card-icon.ic-starter{ background:linear-gradient(135deg,#34d399,#0d9488); }
+  .pricing-card-icon.ic-basic{ background:linear-gradient(135deg,#38bdf8,#2563eb); }
+  .pricing-card-icon.ic-pro{ background:linear-gradient(135deg,#60a5fa,#1d3f8f); }
+  .pricing-card-icon svg{ width:13px; height:13px; }
+  .pricing-card-name{ font-size:11.5px; font-weight:800; color:var(--ink); margin-bottom:4px; }
+  .pricing-card-price{ font-size:14.5px; font-weight:900; color:var(--ink); line-height:1.1; }
+  .pricing-card-price span{ font-size:8px; font-weight:800; color:var(--blue); vertical-align:super; margin-right:1px; }
+  .pricing-card-permo{ font-size:7.8px; color:var(--muted); font-weight:700; margin-bottom:4px; }
+  .pricing-card-usd{
+    display:inline-block; font-size:7.8px; color:var(--blue-ink); font-weight:700; margin-bottom:6px;
+    background:#eef3ff; padding:2px 6px; border-radius:999px;
+  }
+  .pricing-card-feat{ list-style:none; margin:0 0 8px; padding:0; display:flex; flex-direction:column; gap:3px; }
+  .pricing-card-feat li{ font-size:8px; color:var(--ink); display:flex; gap:4px; align-items:flex-start; line-height:1.3; }
+  .pricing-card-feat li b{ font-weight:800; }
+  .pricing-card-feat li::before{ content:"\2713"; color:#16a34a; font-weight:900; flex-shrink:0; }
+  .pricing-card-btn{
+    display:block; text-align:center; background:linear-gradient(120deg,var(--blue),var(--blue-dark)); color:#fff;
+    font-size:8.2px; font-weight:800; letter-spacing:.2px; padding:6px 4px; border-radius:7px; text-decoration:none;
+  }
+  .pricing-card-btn:hover{ box-shadow:0 6px 14px rgba(37,99,235,.4); }
+
+  .pricing-right{ flex:0 0 130px; position:relative; display:flex; align-items:center; justify-content:center; z-index:1; }
+  .pricing-right-icons{ display:flex; align-items:flex-end; gap:6px; opacity:.92; }
+  .pricing-right-icons svg{ filter:drop-shadow(0 6px 10px rgba(0,0,0,.25)); }
+  .pricing-right-url{ position:absolute; bottom:10px; right:16px; color:#fff; font-size:9.5px; font-weight:700; opacity:.85; white-space:nowrap; }
+  @media (max-width:1180px){
+    .pricing-right{ display:none; }
+  }
+
+  /* ============ VIDEO MODAL ============ */
+  .video-modal-overlay{ position:fixed; inset:0; background:rgba(8,10,16,.78); backdrop-filter:blur(5px); display:none; align-items:center; justify-content:center; z-index:999; padding:20px; }
+  .video-modal-overlay.open{ display:flex; }
+  .video-modal-box{ position:relative; width:100%; max-width:880px; background:#000; border-radius:16px; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,.55); aspect-ratio:16/9; }
+  .video-modal-box iframe{ width:100%; height:100%; border:0; display:block; }
+  .video-modal-close{ position:absolute; top:-44px; right:0; width:36px;height:36px;border-radius:50%; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.4); color:#fff; font-size:18px; display:flex;align-items:center;justify-content:center; cursor:pointer; }
+  .video-modal-close:hover{ background:rgba(255,255,255,.3); }
+
+  /* ============ 2. WELCOME HERO ============ */
+  .welcome-hero{
+    border-radius:var(--radius);
+    background:linear-gradient(120deg,#ffffff 0%, #f3f7ff 60%, #eef2ff 100%);
+    border:1px solid var(--line);
+    box-shadow:0 12px 30px -8px rgba(15,31,61,.10);
+    padding:32px 36px;
+    display:flex; align-items:center; justify-content:space-between; gap:24px;
+    position:relative; overflow:hidden;
+  }
+  .welcome-hero::before{
+    content:""; position:absolute; right:-60px; top:-60px; width:240px; height:240px; border-radius:50%;
+    background:radial-gradient(circle, rgba(37,99,235,.10) 0%, transparent 70%);
+  }
+  .welcome-left{ position:relative; z-index:2; }
+  .welcome-left .page-h1{ font-size:13px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin:0 0 8px; }
+  .welcome-left .greet{ font-size:24px; font-weight:800; color:var(--blue-ink); margin:0 0 6px; letter-spacing:-.3px; }
+  .welcome-left .sub{ font-size:14px; color:var(--muted); margin:0; }
+  .welcome-actions{ display:flex; gap:12px; flex-shrink:0; position:relative; z-index:2; }
+  .hbtn{ padding:13px 26px; border-radius:11px; font-weight:700; font-size:13.5px; cursor:pointer; border:none; transition:transform .15s ease, box-shadow .15s ease; }
+  .hbtn-primary{ background:linear-gradient(120deg,var(--blue),var(--blue-dark)); color:#fff; box-shadow:0 10px 22px -6px rgba(37,99,235,.5); }
+  .hbtn-primary:hover{ transform:translateY(-2px); box-shadow:0 14px 28px -6px rgba(37,99,235,.55); }
+  .hbtn-secondary{ background:#fff; color:var(--blue-ink); border:1.5px solid var(--line); }
+  .hbtn-secondary:hover{ border-color:var(--blue); color:var(--blue); }
+
+  /* ============ 3. KPI CARDS ============ */
+  .kpi-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .kpi-card{
+    background:#fff; border-radius:var(--radius); border:1px solid var(--line);
+    padding:22px 22px 20px; display:flex; align-items:center; gap:16px;
+    box-shadow:0 4px 14px -4px rgba(15,31,61,.08);
+    transition:transform .18s ease, box-shadow .18s ease;
+    text-decoration:none; color:inherit; cursor:pointer; position:relative;
+  }
+  .kpi-card:hover{ transform:translateY(-5px); box-shadow:0 16px 30px -8px rgba(15,31,61,.16); }
+  .kpi-card .kpi-go{
+    position:absolute; top:20px; right:20px; color:var(--line); font-size:18px;
+    transition:color .18s ease, transform .18s ease;
+  }
+  .kpi-card:hover .kpi-go{ color:var(--blue); transform:translateX(3px); }
+  .kpi-icon{ width:54px; height:54px; border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .kpi-icon svg{ width:26px; height:26px; }
+  .kpi-icon.open{ background:#dbe9ff; color:var(--open); }
+  .kpi-icon.progress{ background:#fef0d6; color:var(--progress); }
+  .kpi-icon.closed{ background:#dcf5e3; color:var(--closed); }
+  .kpi-num{ font-size:30px; font-weight:800; line-height:1; color:var(--ink); }
+  .kpi-label{ font-size:13px; color:var(--muted); font-weight:600; margin-top:4px; }
+  .kpi-trend{ font-size:11.5px; font-weight:700; margin-top:6px; display:inline-flex; align-items:center; gap:3px; }
+  .kpi-trend.up{ color:var(--closed); } .kpi-trend.down{ color:#e23b3b; } .kpi-trend.flat{ color:var(--muted); }
+
+  /* ============ 4. PRODUCT CARDS ============ */
+  .product-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .product-card{
+    background:#fff; border-radius:var(--radius); border:1px solid var(--line); overflow:hidden;
+    box-shadow:0 4px 14px -4px rgba(15,31,61,.08); text-decoration:none; color:inherit;
+    display:flex; flex-direction:column;
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+  .product-card:hover{ transform:translateY(-4px) scale(1.01); box-shadow:0 16px 26px -10px rgba(15,31,61,.18); }
+  .product-banner{
+    height:84px; display:flex; align-items:center; justify-content:center; position:relative;
+  }
+  .product-banner img{ max-width:62%; max-height:60%; object-fit:contain; position:relative; z-index:2; }
+  .product-banner .pb-icon{ position:relative; z-index:2; width:36px; height:36px; }
+  .product-banner.theme-blue{ background:linear-gradient(120deg,#1d3f8f,#3a6fd6); }
+  .product-banner.theme-orange{ background:linear-gradient(120deg,#b15a06,#ffa64d); }
+  .product-banner.theme-red{ background:linear-gradient(120deg,#7a0e16,#ff5b4d); }
+  .product-banner.theme-green{ background:linear-gradient(120deg,#0d4d33,#3ec98c); }
+  .product-banner.theme-yellow{ background:linear-gradient(120deg,#8a6500,#ffd35c); }
+  .product-body{ padding:13px 14px 14px; display:flex; flex-direction:column; gap:5px; flex:1; }
+  .product-title{ font-size:13px; font-weight:800; color:var(--ink); letter-spacing:-.2px; }
+  .product-desc{ font-size:11px; color:var(--muted); line-height:1.42; flex:1; }
+  .product-cta{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:var(--blue); margin-top:2px; }
+  .product-card:hover .product-cta{ gap:8px; }
+  .section-head h3{ padding-top:2px; }
+  .see-all-btn{
+    background:none; border:none; cursor:pointer;
+    font-size:12.5px; color:var(--blue); font-weight:700; font-family:inherit;
+    padding:0; display:inline-flex; align-items:center; gap:4px;
+    transition:gap .18s ease;
+  }
+  .see-all-btn:hover{ gap:6px; }
+  .product-demo-btn{
+    display:inline-flex; align-items:center; gap:4px;
+    background:var(--blue); color:#fff; font-size:11.5px; font-weight:700;
+    padding:5px 12px; border-radius:7px; border:none; cursor:pointer; font-family:inherit;
+    transition:background .18s ease, transform .18s ease;
+    line-height:1.3;
+  }
+  .product-demo-btn:hover{ background:var(--blue-dark); transform:translateY(-1px); }
+  .product-card-row{ display:flex; align-items:center; justify-content:space-between; margin-top:6px; gap:8px; }
+  /* Product Modal */
+  .product-modal-overlay{ position:fixed; inset:0; background:rgba(8,10,16,.78); backdrop-filter:blur(5px); display:none; align-items:center; justify-content:center; z-index:998; padding:20px; }
+  .product-modal-overlay.open{ display:flex; }
+  .product-modal-box{
+    background:#fff; border-radius:20px; max-width:960px; width:100%;
+    max-height:85vh; overflow-y:auto; padding:32px 36px;
+    box-shadow:0 30px 70px rgba(0,0,0,.5);
+  }
+  .product-modal-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; }
+  .product-modal-header h2{ margin:0; font-size:20px; font-weight:800; color:var(--blue-ink); }
+  .product-modal-close{
+    width:32px;height:32px;border-radius:50%; background:#f1f4f8; border:none;
+    color:var(--ink); font-size:16px; cursor:pointer; display:flex;align-items:center;justify-content:center;
+    transition:background .18s ease;
+  }
+  .product-modal-close:hover{ background:var(--line); }
+  .product-modal-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .product-modal-card{
+    background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden;
+    display:flex; flex-direction:column;
+    transition:border-color .18s ease, box-shadow .18s ease;
+  }
+  .product-modal-card:hover{ border-color:var(--blue); box-shadow:0 6px 16px -6px rgba(37,99,235,.18); }
+  .pm-visual{ height:86px; display:flex; align-items:center; justify-content:center; }
+  .pm-visual.theme-blue{ background:linear-gradient(120deg,#1d3f8f,#3a6fd6); }
+  .pm-visual.theme-orange{ background:linear-gradient(120deg,#b15a06,#ffa64d); }
+  .pm-visual.theme-red{ background:linear-gradient(120deg,#7a0e16,#ff5b4d); }
+  .pm-visual.theme-green{ background:linear-gradient(120deg,#0d4d33,#3ec98c); }
+  .pm-visual.theme-yellow{ background:linear-gradient(120deg,#8a6500,#ffd35c); }
+  .pm-visual.theme-purple{ background:linear-gradient(120deg,#4c1d95,#8b5cf6); }
+  .pm-visual.theme-cyan{ background:linear-gradient(120deg,#075985,#22d3ee); }
+  .pm-icon{
+    width:46px; height:46px; border-radius:14px; background:rgba(255,255,255,.16);
+    color:#fff; display:flex; align-items:center; justify-content:center;
+    font-size:14px; font-weight:900; letter-spacing:.3px;
+  }
+  .pm-body{ padding:16px; display:flex; flex-direction:column; gap:8px; flex:1; }
+  .product-modal-card .pm-title{ font-size:14.5px; font-weight:800; color:var(--ink); }
+  .pm-desc{ font-size:12.3px; color:var(--muted); line-height:1.45; min-height:34px; }
+  .product-modal-card .pm-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:auto; }
+  .product-modal-card .pm-link{
+    font-size:12px; font-weight:700; color:var(--blue); text-decoration:none;
+    display:inline-flex; align-items:center; gap:3px;
+  }
+  .product-modal-card .pm-link:hover{ text-decoration:underline; }
+
+  /* ============ SOFT SELLING SECTIONS ============ */
+  .solution-nudge{
+    position:relative; overflow:hidden;
+    background:linear-gradient(120deg,#ffffff 0%,#f5f8ff 58%,#eef4ff 100%);
+    border:1px solid var(--line); border-radius:16px; padding:18px 20px;
+    box-shadow:0 14px 32px -18px rgba(15,31,61,.28);
+    display:grid; grid-template-columns:1.05fr 1.25fr .9fr; gap:20px; align-items:center;
+  }
+  .solution-nudge::before{
+    content:""; position:absolute; right:-90px; top:-120px; width:260px; height:260px; border-radius:50%;
+    background:radial-gradient(circle, rgba(37,99,235,.12), transparent 68%);
+  }
+  .solution-copy, .solution-path, .solution-feature{ position:relative; z-index:2; }
+  .solution-kicker{ font-size:9.5px; font-weight:900; letter-spacing:.9px; color:var(--blue); text-transform:uppercase; margin-bottom:6px; }
+  .solution-title{ margin:0 0 6px; color:var(--blue-ink); font-size:16.5px; line-height:1.2; letter-spacing:-.35px; }
+  .solution-desc{ margin:0; color:var(--muted); font-size:11.5px; line-height:1.5; }
+  .solution-path{ display:flex; flex-direction:column; gap:0; }
+  .solution-step{
+    display:grid; grid-template-columns:26px 1fr auto; gap:10px; align-items:center;
+    padding:7px 0; border-bottom:1px solid rgba(15,31,61,.08);
+    text-decoration:none; color:inherit;
+  }
+  .solution-step:last-child{ border-bottom:none; }
+  .solution-step:hover .solution-step-title{ color:var(--blue); }
+  .solution-num{
+    width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:#eef3ff; color:var(--blue); font-size:10px; font-weight:900;
+  }
+  .solution-step-title{ font-size:12px; font-weight:850; color:var(--ink); transition:color .16s ease; }
+  .solution-step-copy{ font-size:11px; color:var(--muted); margin-top:1px; }
+  .solution-arrow{ color:var(--blue); font-weight:900; opacity:.8; }
+  .solution-feature{
+    background:#fff; border:1px solid #dbe9ff; border-radius:13px; padding:14px;
+    box-shadow:0 16px 30px -18px rgba(37,99,235,.35);
+  }
+  .solution-feature-label{ display:inline-block; color:#16a34a; background:#dcf5e3; font-size:9.5px; font-weight:900; padding:4px 7px; border-radius:999px; margin-bottom:7px; }
+  .solution-feature h4{ margin:0 0 5px; font-size:14px; color:var(--blue-ink); }
+  .solution-feature p{ margin:0 0 10px; color:var(--muted); font-size:11px; line-height:1.45; }
+  .solution-feature a{ display:inline-flex; align-items:center; gap:6px; color:#fff; background:linear-gradient(120deg,var(--blue),var(--blue-dark)); text-decoration:none; font-size:11px; font-weight:850; padding:7px 12px; border-radius:9px; }
+  .solution-feature a:hover{ box-shadow:0 12px 22px -12px rgba(37,99,235,.7); transform:translateY(-1px); }
+
+  /* ============ 5. KNOWLEDGE BASE TABLE ============ */
+  .kb-toolbar{ display:flex; gap:10px; margin-bottom:14px; }
+  .kb-search{
+    flex:1; max-width:320px; padding:10px 14px; border-radius:10px; border:1px solid var(--line);
+    font-size:13px; background:#fff;
+  }
+  .kb-container{
+    background:#fff; border-radius:var(--radius); border:1px solid var(--line);
+    box-shadow:0 4px 14px -4px rgba(15,31,61,.08); overflow-x:auto; overflow-y:hidden;
+  }
+  table.kb-table{ width:100%; border-collapse:collapse; }
+  .kb-table thead th{
+    text-align:left; font-size:11.5px; font-weight:800; text-transform:uppercase; letter-spacing:.4px;
+    color:var(--muted); padding:14px 18px; border-bottom:1px solid var(--line); background:#fafbfd;
+  }
+  .kb-table tbody td{ padding:15px 18px; font-size:13.5px; border-bottom:1px solid #f0f2f5; vertical-align:top; }
+  .kb-table tbody tr{ transition:background .15s ease; cursor:pointer; }
+  .kb-table tbody tr:hover{ background:#f5f8ff; }
+  .kb-table tbody tr:focus-visible{ background:#f5f8ff; outline:2.5px solid var(--focus); outline-offset:-2px; }
+  .kb-table tbody tr:hover .kb-chevron{ color:var(--blue); transform:translateX(2px); }
+  .kb-table tbody tr:last-child td{ border-bottom:none; }
+  .kb-id{ color:var(--blue); font-weight:700; font-size:12.5px; }
+  .kb-title{ font-weight:700; color:var(--ink); margin-top:2px; }
+  .kb-cat{
+    display:inline-block; background:#eef3ff; color:var(--blue-ink); font-size:11.5px; font-weight:700;
+    padding:4px 10px; border-radius:7px; white-space:nowrap;
+  }
+  .kb-module{ font-size:12.5px; color:var(--muted); }
+  .kb-date{ font-size:12.5px; color:var(--muted); white-space:nowrap; }
+  .kb-chevron{
+    display:flex; align-items:center; justify-content:center; color:var(--line);
+    transition:color .15s ease, transform .15s ease;
+  }
+  .kb-chevron svg{ width:16px;height:16px; }
+  .kb-empty{ padding:48px 20px; text-align:center; }
+  .kb-empty svg{ width:38px;height:38px; color:var(--line); margin-bottom:10px; }
+  .kb-empty p{ margin:0; font-size:13.5px; color:var(--muted); }
+  .kb-empty strong{ display:block; font-size:14.5px; color:var(--ink); margin-bottom:4px; }
+
+  .footer{ border-top:1px solid var(--line); padding:14px 28px; display:flex; justify-content:space-between; font-size:12px; color:#444; background:#fff; }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width:1180px){
+    .product-grid{ grid-template-columns:repeat(2,1fr); }
+    .solution-nudge{ grid-template-columns:1fr; gap:18px; }
+  }
+  @media (max-width:1180px){
+    .asset-promo-card{ display:none; }
+    .asset-slide .banner-glass{ max-width:78%; }
+  }
+  @media (max-width:1080px){
+    .kpi-grid{ grid-template-columns:1fr; }
+    .welcome-hero{ flex-direction:column; align-items:flex-start; }
+    .welcome-actions{ width:100%; }
+    .hbtn{ flex:1; }
+    .banner-glass{ max-width:78%; padding:22px 22px; }
+    .banner-glass h2{ font-size:22px; }
+    .banner-logo-chip, .banner-icon-chip{ display:none; }
+    .kb-table thead th:nth-child(4), .kb-table tbody td:nth-child(4){ display:none; }
+  }
+  @media (max-width:760px){
+    .sidebar{ width:230px; transform:translateX(-100%); box-shadow:16px 0 36px rgba(15,31,61,.18); }
+    .sidebar-floating-toggle{ display:none; }
+    body.sidebar-open{ overflow:hidden; }
+    body.sidebar-open .sidebar{ transform:translateX(0); }
+    body.sidebar-open .sidebar-scrim{ display:block; }
+    .main,
+    body.sidebar-collapsed .main{ margin-left:0; width:100%; }
+    body.sidebar-collapsed .sidebar{ width:230px; }
+    body.sidebar-collapsed .sidebar-header{ padding:22px 18px 26px; }
+    body.sidebar-collapsed .sidebar-header .logo{ width:64px; height:64px; margin:0 auto 10px; border-radius:12px; }
+    body.sidebar-collapsed .sidebar-header .email,
+    body.sidebar-collapsed .sidebar-header .name{ opacity:1; transform:none; height:auto; pointer-events:auto; }
+    body.sidebar-collapsed .sidebar-header .name{ margin-top:2px; }
+    body.sidebar-collapsed .nav a{ justify-content:flex-start; gap:12px; padding:13px 20px; font-size:14.5px; border-left:3px solid transparent; border-right:none; }
+    body.sidebar-collapsed .nav a.active{ border-left-color:var(--blue); border-right:none; }
+    body.sidebar-collapsed .nav a svg{ width:18px; height:18px; }
+    .content{ padding:18px; }
+    .product-grid{ grid-template-columns:1fr; }
+    .product-modal-grid{ grid-template-columns:1fr; }
+    .solution-nudge{ padding:18px; }
+    .banner-carousel{ height:340px; }
+    .banner-slide{ padding:0 24px; align-items:flex-end; padding-bottom:60px; }
+    .banner-dots{ left:24px; }
+    .kb-table thead th:nth-child(3), .kb-table tbody td:nth-child(3){ display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar" id="appSidebar">
+    <div class="sidebar-header">
+      <div class="logo">N</div>
+      <div class="email">nadya@sterling-team.com</div>
+      <div class="name">Nadya</div>
+    </div>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="#" class="active" aria-current="page" title="Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        Home
+      </a>
+      <a href="#" title="Tickets">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v13H7l-3 3z"/></svg>
+        Tickets
+      </a>
+      <a href="#" title="Solutions">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a6 6 0 0 0-4 10.5c.6.5 1 1.3 1 2.1V16h6v-1.4c0-.8.4-1.6 1-2.1A6 6 0 0 0 12 2Z"/></svg>
+        Solutions
+      </a>
+      <a href="#" title="Change Password">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        Change Password
+      </a>
+      <a href="#" title="Logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </a>
+    </nav>
+  </aside>
+  <button type="button" class="sidebar-floating-toggle" id="sidebarFloatToggle" aria-label="Collapse sidebar" aria-controls="appSidebar" aria-expanded="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <div class="sidebar-scrim" id="sidebarScrim" aria-hidden="true"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="title">
+        <button type="button" id="sidebarToggle" aria-label="Collapse sidebar" aria-controls="appSidebar" aria-expanded="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        Support Ticketing System
+      </div>
+      <div class="icons">
+        <button type="button" class="icon-btn" aria-label="Help">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2 1.8-2 3.5"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </button>
+        <button type="button" class="icon-btn bell" aria-label="Notifications, 1 unread">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 12 6 8Z"/><path d="M10.5 19a1.5 1.5 0 0 0 3 0"/></svg>
+          <span class="dot" aria-hidden="true">1</span>
+        </button>
+        <a href="#" class="logout-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Log out
+        </a>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ============ 1. WELCOME HERO (primary focus: work status) ============ -->
+      <div class="welcome-hero section-gap">
+        <div class="welcome-left">
+          <p class="page-h1">Home</p>
+          <h1 class="greet" id="greetText">Welcome, Nadya</h1>
+          <p class="sub">Here is your ticket summary for today</p>
+        </div>
+        <div class="welcome-actions">
+          <button class="hbtn hbtn-primary">+ Create Ticket</button>
+          <button class="hbtn hbtn-secondary">View My Tickets</button>
+        </div>
+      </div>
+
+      <!-- ============ 2. KPI CARDS (clickable to related ticket lists) ============ -->
+      <div class="kpi-grid section-gap">
+        <a class="kpi-card" href="#" aria-label="View 24 open tickets">
+          <div class="kpi-icon open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+          <div>
+            <div class="kpi-num">24</div>
+            <div class="kpi-label">Open Tickets</div>
+          </div>
+          <span class="kpi-go" aria-hidden="true">&#8594;</span>
+        </a>
+        <a class="kpi-card" href="#" aria-label="View 12 tickets closed today">
+          <div class="kpi-icon progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.7 2.7L16 9.5"/></svg></div>
+          <div>
+            <div class="kpi-num">12</div>
+            <div class="kpi-label">Closed Today</div>
+          </div>
+          <span class="kpi-go" aria-hidden="true">&#8594;</span>
+        </a>
+        <a class="kpi-card" href="#" aria-label="View 158 total tickets">
+          <div class="kpi-icon closed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M8 14h3"/></svg></div>
+          <div>
+            <div class="kpi-num">158</div>
+            <div class="kpi-label">Total Ticket</div>
+          </div>
+          <span class="kpi-go" aria-hidden="true">&#8594;</span>
+        </a>
+      </div>
+
+      <!-- ============ 3. PRODUCT BANNER SLIDER (secondary information, not the main focus) ============ -->
+      <div class="section-gap">
+        <div class="section-head">
+        </div>
+        <div class="banner-carousel" id="bannerCarousel" role="region" aria-roledescription="carousel" aria-label="Sterling Team product promotions">
+        <div class="banner-track" id="bannerTrack" aria-live="polite">
+
+          <a class="banner-slide-img" href="https://www.sterling-team.com/" target="_blank" rel="noopener" aria-label="2 of 6: STEM Consulting and Technology Solutions">
+            <img src="banners/slide-2-stem-consulting.png" alt="STEM Consulting & Technology Solutions">
+          </a>
+
+          <a class="banner-slide-img" href="https://www.sap-business-one-tips.com/en/" target="_blank" rel="noopener" aria-label="3 of 6: SAP Business One Tips and Articles">
+            <img src="banners/slide-3-sapb1-tips.png" alt="SAP Business One Tips & Articles">
+          </a>
+
+          <a class="banner-slide-img" href="https://www.ireappos.com/" target="_blank" rel="noopener" aria-label="4 of 6: iREAP POS, Easy and Powerful">
+            <img src="banners/slide-4-ireap-pos.svg" alt="iREAP POS - Easy & Powerful">
+          </a>
+
+          <div class="banner-slide-img" data-slide="ireapasset">
+            <a href="https://asset.ireappos.com" target="_blank" rel="noopener" aria-label="5 of 6: iReap Asset free trial">
+              <img src="banners/slide-5-ireap-asset-trial.svg" alt="iReap Asset - Start Free 14-Day Trial">
+            </a>
+            <button class="banner-play-btn" id="btnAssetDemo" type="button">&#9654; Watch Video</button>
+          </div>
+
+          <div class="banner-slide-img" data-slide="ireapbiz">
+            <a href="https://www.sterling-team.com/" target="_blank" rel="noopener" aria-label="6 of 6: iReapBiz SAP Business One Integration">
+              <img src="banners/slide-6-ireapbiz.svg" alt="iReapBiz - SAP Business One Integration">
+            </a>
+            <button class="banner-play-btn" id="btnWatchDemo" type="button">&#9654; Watch Demo</button>
+          </div>
+
+        </div>
+        <button class="banner-nav banner-prev" id="bannerPrev" aria-label="Previous slide">&#8249;</button>
+        <button class="banner-nav banner-next" id="bannerNext" aria-label="Next slide">&#8250;</button>
+        <button class="banner-pause" id="bannerPause" aria-label="Pause autoplay">
+          <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+          <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><polygon points="6 4 20 12 6 20"/></svg>
+        </button>
+        <div class="banner-dots" id="bannerDots"></div>
+        </div>
+      </div>
+
+      <!-- VIDEO MODAL -->
+      <div class="video-modal-overlay" id="videoModalOverlay">
+        <div class="video-modal-box">
+          <button class="video-modal-close" id="videoModalClose" aria-label="Close video">&#10005;</button>
+          <iframe id="videoModalIframe" src="" title="iReapBiz Demo Video" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        </div>
+      </div>
+
+      <!-- ============ 4. PRODUCT CARDS ============ -->
+      <div class="section-gap">
+        <div class="section-head">
+          <h3>Our Products</h3>
+          <button class="see-all-btn" id="seeAllBtn" type="button">See All.. &#8594;</button>
+        </div>
+        <div class="product-grid">
+
+          <a class="product-card" href="https://www.sterling-team.com/" target="_blank" rel="noopener">
+            <div class="product-banner theme-blue">
+              <svg class="pb-icon" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M12 8v8"/></svg>
+            </div>
+            <div class="product-body">
+              <div class="product-title">STEM Consulting</div>
+              <div class="product-desc">SAP Business One implementation & digital transformation partner.</div>
+              <div class="product-card-row">
+                <span class="product-cta">Visit Website &#8594;</span>
+                <span class="product-demo-btn" data-demo="STEM Consulting">&#9654; Demo</span>
+              </div>
+            </div>
+          </a>
+
+          <a class="product-card" href="https://www.sap-business-one-tips.com/en/" target="_blank" rel="noopener">
+            <div class="product-banner theme-orange">
+              <svg class="pb-icon" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <div class="product-body">
+              <div class="product-title">SAPB1Tips</div>
+              <div class="product-desc">Articles, tutorials & best practices for SAP Business One.</div>
+              <div class="product-card-row">
+                <span class="product-cta">Read Articles &#8594;</span>
+                <span class="product-demo-btn" data-demo="SAPB1Tips">&#9654; Demo</span>
+              </div>
+            </div>
+          </a>
+
+          <a class="product-card" href="https://www.ireappos.com/" target="_blank" rel="noopener">
+            <div class="product-banner theme-red">
+              <svg class="pb-icon" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 18h6"/></svg>
+            </div>
+            <div class="product-body">
+              <div class="product-title">iREAP POS</div>
+              <div class="product-desc">Cashier app for Android & Salesman &#8212; multi-branch & franchise ready.</div>
+              <div class="product-card-row">
+                <span class="product-cta">Explore Product &#8594;</span>
+                <span class="product-demo-btn" data-demo="iREAP POS">&#9654; Demo</span>
+              </div>
+            </div>
+          </a>
+
+          <a class="product-card" href="https://www.sterling-team.com/" target="_blank" rel="noopener">
+            <div class="product-banner theme-green">
+              <svg class="pb-icon" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="product-body">
+              <div class="product-title">iREAPNET HR &amp; Payroll</div>
+              <div class="product-desc">Modern HR & payroll management dashboard for growing teams.</div>
+              <div class="product-card-row">
+                <span class="product-cta">Learn More &#8594;</span>
+                <span class="product-demo-btn" data-demo="iREAPNET HR &amp; Payroll">&#9654; Demo</span>
+              </div>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- PRODUCT MODAL ALL -->
+      <div class="product-modal-overlay" id="productModalOverlay">
+        <div class="product-modal-box">
+          <div class="product-modal-header">
+            <h2>All STEM Products</h2>
+            <button class="product-modal-close" id="productModalClose" type="button">&#10005;</button>
+          </div>
+          <div class="product-modal-grid" id="productModalGrid">
+            <!-- populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 5. NEW KNOWLEDGE BASE ============ -->
+      <div class="section-gap">
+        <div class="section-head">
+          <h3>New Knowledge Base</h3>
+          <span>For customers assigned to you</span>
+        </div>
+        <div class="kb-toolbar">
+          <input class="kb-search" id="kbSearch" type="text" placeholder="Search knowledge base..." aria-label="Search knowledge base">
+        </div>
+        <div class="kb-container">
+          <table class="kb-table">
+            <thead>
+              <tr>
+                <th style="width:36px;">No</th>
+                <th>Knowledge Base Title</th>
+                <th>Category</th>
+                <th>Assigned Customer / Module</th>
+                <th>Date Updated</th>
+                <th style="width:36px;"><span class="sr-only">Open details</span></th>
+              </tr>
+            </thead>
+            <tbody id="kbTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <span><strong>Copyright</strong> PT Sterling Tulus Cemerlang &#169; 2025</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ===== GREETING BY TIME OF DAY ===== */
+  var h = new Date().getHours();
+  var greeting = h < 11 ? "Good Morning" : (h < 15 ? "Good Afternoon" : "Good Evening");
+  document.getElementById('greetText').textContent = greeting + ", Nadya";
+
+  /* ===== COLLAPSIBLE SIDEBAR ===== */
+  var sidebarToggle = document.getElementById('sidebarToggle');
+  var sidebarFloatToggle = document.getElementById('sidebarFloatToggle');
+  var sidebar = document.getElementById('appSidebar');
+  var sidebarScrim = document.getElementById('sidebarScrim');
+  var mobileMenuQuery = window.matchMedia('(max-width:760px)');
+  var sidebarButtons = [sidebarToggle, sidebarFloatToggle].filter(function(btn){ return btn; });
+
+  function isMobileMenu(){ return mobileMenuQuery.matches; }
+
+  function updateSidebarButton(button, label, expanded){
+    button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    button.setAttribute('aria-label', label);
+    button.setAttribute('title', label);
+  }
+
+  function setSidebarButtonState(){
+    if(sidebarButtons.length === 0) return;
+    if(isMobileMenu()){
+      var mobileOpen = document.body.classList.contains('sidebar-open');
+      sidebarButtons.forEach(function(button){
+        updateSidebarButton(button, mobileOpen ? 'Close navigation menu' : 'Open navigation menu', mobileOpen);
+      });
+      return;
+    }
+    var collapsed = document.body.classList.contains('sidebar-collapsed');
+    sidebarButtons.forEach(function(button){
+      updateSidebarButton(button, collapsed ? 'Expand sidebar' : 'Collapse sidebar', !collapsed);
+    });
+  }
+
+  function toggleSidebarMenu(){
+    if(isMobileMenu()){
+      document.body.classList.toggle('sidebar-open');
+    } else {
+      document.body.classList.toggle('sidebar-collapsed');
+    }
+    setSidebarButtonState();
+  }
+
+  function closeMobileSidebar(){
+    document.body.classList.remove('sidebar-open');
+    setSidebarButtonState();
+  }
+
+  function syncSidebarMode(){
+    if(isMobileMenu()){
+      document.body.classList.remove('sidebar-collapsed');
+      document.body.classList.remove('sidebar-open');
+    } else {
+      document.body.classList.remove('sidebar-open');
+    }
+    setSidebarButtonState();
+  }
+
+  if(sidebarToggle){
+    sidebarToggle.addEventListener('click', toggleSidebarMenu);
+  }
+  if(sidebarFloatToggle){
+    sidebarFloatToggle.addEventListener('click', toggleSidebarMenu);
+  }
+  if(sidebarScrim){ sidebarScrim.addEventListener('click', closeMobileSidebar); }
+  if(sidebar){
+    sidebar.addEventListener('click', function(e){
+      if(isMobileMenu() && e.target.closest('a')) closeMobileSidebar();
+    });
+  }
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && document.body.classList.contains('sidebar-open')) closeMobileSidebar();
+  });
+  if(mobileMenuQuery.addEventListener){
+    mobileMenuQuery.addEventListener('change', syncSidebarMode);
+  } else if(mobileMenuQuery.addListener){
+    mobileMenuQuery.addListener(syncSidebarMode);
+  }
+  syncSidebarMode();
+
+  /* ===== BANNER CAROUSEL ===== */
+  var track = document.getElementById('bannerTrack');
+  var dotsWrap = document.getElementById('bannerDots');
+  var prevBtn = document.getElementById('bannerPrev');
+  var nextBtn = document.getElementById('bannerNext');
+  var pauseBtn = document.getElementById('bannerPause');
+  var pauseIcon = document.getElementById('pauseIcon');
+  var playIcon = document.getElementById('playIcon');
+  var total = track.children.length;
+  var current = 0;
+  var timer;
+  var userPaused = false;
+  var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  for(var i=0;i<total;i++){
+    var dot = document.createElement('button');
+    dot.className = 'banner-dot' + (i===0?' active':'');
+    dot.setAttribute('aria-label', 'Go to slide ' + (i+1) + ' of ' + total);
+    dot.addEventListener('click', function(idx){ return function(){ goTo(idx); }; }(i));
+    dotsWrap.appendChild(dot);
+  }
+  var dots = dotsWrap.children;
+
+  function update(){
+    track.style.transform = 'translateX(' + (-current*100) + '%)';
+    for(var j=0;j<dots.length;j++){ dots[j].classList.toggle('active', j===current); }
+  }
+  function goTo(idx){ current = (idx+total)%total; update(); }
+  function next(){ goTo(current+1); }
+  function prevSlide(){ goTo(current-1); }
+  function start(){ if(userPaused || prefersReducedMotion) return; clearInterval(timer); timer = setInterval(next, 4500); }
+  function stop(){ clearInterval(timer); }
+
+  nextBtn.addEventListener('click', function(e){ e.preventDefault(); next(); });
+  prevBtn.addEventListener('click', function(e){ e.preventDefault(); prevSlide(); });
+
+  pauseBtn.addEventListener('click', function(){
+    userPaused = !userPaused;
+    if(userPaused){
+      stop();
+      pauseIcon.style.display = 'none';
+      playIcon.style.display = '';
+      pauseBtn.setAttribute('aria-label', 'Resume autoplay');
+    } else {
+      start();
+      pauseIcon.style.display = '';
+      playIcon.style.display = 'none';
+      pauseBtn.setAttribute('aria-label', 'Pause autoplay');
+    }
+  });
+
+  var carousel = document.getElementById('bannerCarousel');
+  carousel.addEventListener('mouseenter', stop);
+  carousel.addEventListener('mouseleave', start);
+  carousel.addEventListener('focusin', stop);
+  carousel.addEventListener('focusout', start);
+  if(prefersReducedMotion){
+    pauseIcon.style.display = 'none';
+    playIcon.style.display = '';
+  } else {
+    start();
+  }
+
+  /* ===== VIDEO MODAL ===== */
+  var YT_VIDEO_ID = 'fOoaag9DvyI';
+  var overlay = document.getElementById('videoModalOverlay');
+  var iframe = document.getElementById('videoModalIframe');
+  var btnOpen = document.getElementById('btnWatchDemo');
+  var btnClose = document.getElementById('videoModalClose');
+
+  function openVideoModal(){
+    iframe.src = 'https://www.youtube.com/embed/' + YT_VIDEO_ID + '?autoplay=1&rel=0';
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    stop();
+  }
+  function closeVideoModal(){
+    overlay.classList.remove('open');
+    iframe.src = '';
+    document.body.style.overflow = '';
+    start();
+  }
+  if(btnOpen){ btnOpen.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); openVideoModal(); }); }
+  var btnAssetDemo = document.getElementById('btnAssetDemo');
+  if(btnAssetDemo){ btnAssetDemo.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); openVideoModal(); }); }
+  btnClose.addEventListener('click', closeVideoModal);
+  overlay.addEventListener('click', function(e){ if(e.target === overlay){ closeVideoModal(); } });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.classList.contains('open')){ closeVideoModal(); } });
+
+  /* ===== PRODUCT MODAL ===== */
+  var productData = [
+    { name: "iREAP POS (Desktop)", short:"POS", theme:"theme-blue", url: "https://www.sterling-team.com/sap-business-one-retail/", desc: "SAP Business One-integrated desktop POS for store and branch operations." },
+    { name: "iREAP Pro", short:"PRO", theme:"theme-red", url: "https://www.ireappos.com", desc: "Android cashier and salesman app for retail, distribution, and franchise businesses." },
+    { name: "iREAPNet", short:"NET", theme:"theme-green", url: "", desc: "HR and payroll management system for modern workforce administration." },
+    { name: "iREAPBiz", short:"BIZ", theme:"theme-yellow", url: "", desc: "SAP Business One-integrated web app for approvals and business operations." },
+    { name: "iREAP Reporting", short:"RPT", theme:"theme-cyan", url: "", desc: "Reporting and analytics dashboard for faster business insights." },
+    { name: "iFLOCS", short:"FLC", theme:"theme-green", url: "https://www.sterling-team.com/sap-business-one-for-farm/", desc: "SAP Business One solution for farm management and agribusiness processes." },
+    { name: "iBOCS", short:"BOC", theme:"theme-purple", url: "", desc: "Business operation control system for integrated business processes." },
+    { name: "Dolfin", short:"DLF", theme:"theme-blue", url: "", desc: "Financial and operational solution to support business management." },
+    { name: "Akuntara", short:"AKT", theme:"theme-orange", url: "", desc: "Modern accounting software for growing business needs." },
+    { name: "iReap Asset", short:"AST", theme:"theme-cyan", url: "https://asset.ireappos.com", desc: "Asset management system for tracking, maintenance, warranties, and asset locations." },
+    { name: "B1Tips", short:"B1", theme:"theme-orange", url: "https://www.sap-business-one-tips.com/", desc: "Articles, tutorials, tips, and best practices for SAP Business One." },
+    { name: "iShopFloor", short:"SFL", theme:"theme-purple", url: "", desc: "Shop floor control and manufacturing execution for production processes." }
+  ];
+
+  var productModalOverlay = document.getElementById('productModalOverlay');
+  var productModalClose = document.getElementById('productModalClose');
+  var productModalGrid = document.getElementById('productModalGrid');
+  var seeAllBtn = document.getElementById('seeAllBtn');
+
+  function renderProductModal(){
+    productModalGrid.innerHTML = '';
+    productData.forEach(function(p){
+      var card = document.createElement('div');
+      card.className = 'product-modal-card';
+      var html = '<div class="pm-visual ' + p.theme + '"><div class="pm-icon">' + p.short + '</div></div>';
+      html += '<div class="pm-body">';
+      html += '<div class="pm-title">' + p.name + '</div>';
+      html += '<div class="pm-desc">' + p.desc + '</div>';
+      html += '<div class="pm-actions">';
+      if(p.url){
+        html += '<a class="pm-link" href="' + p.url + '" target="_blank" rel="noopener">Visit Website &#8594;</a>';
+      }
+      html += '<span class="product-demo-btn" data-demo="' + p.name + '">&#9654; Demo</span>';
+      html += '</div></div>';
+      card.innerHTML = html;
+      productModalGrid.appendChild(card);
+    });
+  }
+
+  function openProductModal(){
+    renderProductModal();
+    productModalOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    stop();
+  }
+
+  function closeProductModal(){
+    productModalOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+    start();
+  }
+
+  if(seeAllBtn){ seeAllBtn.addEventListener('click', function(e){ e.preventDefault(); openProductModal(); }); }
+  productModalClose.addEventListener('click', closeProductModal);
+  productModalOverlay.addEventListener('click', function(e){ if(e.target === productModalOverlay){ closeProductModal(); } });
+
+  /* ===== DEMO BUTTON CLICK HANDLER (event delegation) ===== */
+  document.addEventListener('click', function(e){
+    var demoBtn = e.target.closest('.product-demo-btn');
+    if(demoBtn){
+      e.preventDefault();
+      e.stopPropagation();
+      var productName = demoBtn.getAttribute('data-demo');
+      console.log('Demo clicked for: ' + productName);
+      openVideoModal();
+    }
+  });
+
+  /* ===== KNOWLEDGE BASE TABLE (DUMMY DATA - DYNAMIC-READY) ===== */
+  var kbData = [
+    { id:"KB-265", title:'Error "Extension DLL Crashed at Update" When Updating BOM Mapping on Specific Client PCs', category:"Bug / Error", module:"SAP Business One for HANA", date:"2026-06-17" },
+    { id:"KB-264", title:"How to Generate an SAP Mobile Certificate", category:"How-To", module:"SAP Business One for HANA, +1 others", date:"2026-06-16" },
+    { id:"KB-263", title:"TI Not Posted to SAP Because TO Status Is Closed and Posting Period Is Locked", category:"Troubleshooting", module:"iReap Biz", date:"2026-06-15" },
+    { id:"KB-262", title:"How to Configure Multi-Level Approval for Purchase Requests", category:"Configuration", module:"iReap Biz", date:"2026-06-14" },
+    { id:"KB-261", title:"Mobile Approval Failed to Sync Due to an Expired Token", category:"Bug / Error", module:"iFLOCS", date:"2026-06-12" },
+    { id:"KB-260", title:"Guide to Generating Manufacturing Dashboard Reports", category:"How-To", module:"iReap Reporting", date:"2026-06-10" },
+    { id:"KB-259", title:"Stock Is Not Synchronized Between iReap POS and SAP B1", category:"Troubleshooting", module:"iReap POS", date:"2026-06-08" },
+    { id:"KB-258", title:"How to Reset Employee Passwords in iREAPNET HR", category:"How-To", module:"iREAPNET", date:"2026-06-05" },
+    { id:"KB-257", title:"Connection Timeout Error During iBOCS Integration with SAP", category:"Bug / Error", module:"iBOCS", date:"2026-06-02" },
+    { id:"KB-256", title:"Multi-Branch Setup for Distributors in iReap POS", category:"Configuration", module:"iReap POS", date:"2026-05-30" }
+  ];
+
+  function formatDate(s){
+    var d = new Date(s);
+    var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
+  }
+
+  var tbody = document.getElementById('kbTableBody');
+  var kbContainerEl = document.querySelector('.kb-container');
+
+  function renderKB(data){
+    tbody.innerHTML = "";
+
+    if(data.length === 0){
+      kbContainerEl.innerHTML =
+        '<div class="kb-empty">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+          '<strong>No results found</strong>' +
+          '<p>Try another keyword or check your search spelling.</p>' +
+        '</div>';
+      return;
+    }
+
+    if(!document.getElementById('kbTableBody')){
+      kbContainerEl.innerHTML =
+        '<table class="kb-table">' +
+          '<thead><tr>' +
+            '<th style="width:36px;">No</th>' +
+            '<th>Knowledge Base Title</th>' +
+            '<th>Category</th>' +
+            '<th>Assigned Customer / Module</th>' +
+            '<th>Date Updated</th>' +
+            '<th style="width:36px;"><span class="sr-only">Open details</span></th>' +
+          '</tr></thead>' +
+          '<tbody id="kbTableBody"></tbody>' +
+        '</table>';
+      tbody = document.getElementById('kbTableBody');
+    }
+
+    data.forEach(function(row, i){
+      var tr = document.createElement('tr');
+      tr.setAttribute('tabindex', '0');
+      tr.setAttribute('role', 'button');
+      tr.setAttribute('aria-label', 'Open details for ' + row.id + ': ' + row.title);
+      tr.innerHTML =
+        '<td>' + (i+1) + '</td>' +
+        '<td><div class="kb-id">' + row.id + '</div><div class="kb-title">' + row.title + '</div></td>' +
+        '<td><span class="kb-cat">' + row.category + '</span></td>' +
+        '<td class="kb-module">' + row.module + '</td>' +
+        '<td class="kb-date">' + formatDate(row.date) + '</td>' +
+        '<td><span class="kb-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></td>';
+      function openDetail(){
+        window.open('#', '_blank');
+      }
+      tr.addEventListener('click', openDetail);
+      tr.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openDetail(); }
+      });
+      tbody.appendChild(tr);
+    });
+  }
+  renderKB(kbData);
+
+  document.getElementById('kbSearch').addEventListener('input', function(e){
+    var q = e.target.value.toLowerCase();
+    renderKB(kbData.filter(function(r){
+      return r.title.toLowerCase().indexOf(q) > -1 || r.category.toLowerCase().indexOf(q) > -1 || r.module.toLowerCase().indexOf(q) > -1 || r.id.toLowerCase().indexOf(q) > -1;
+    }));
+  });
+})();
+</script>
+</body>
+</html>
